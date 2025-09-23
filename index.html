@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Klassen Wettsystem</title>
+    <title>G-Coin Wettsystem</title>
     <style>
         * {
             margin: 0;
@@ -39,6 +39,17 @@
             margin-bottom: 10px;
         }
         
+        .g-coin-display {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        
         .nav-tabs {
             background: #f5f5f5;
             display: flex;
@@ -71,7 +82,7 @@
             padding: 30px;
         }
         
-        .login-form, .admin-panel, .user-dashboard {
+        .login-form, .admin-panel, .user-dashboard, .profile-section {
             max-width: 500px;
             margin: 0 auto;
             text-align: center;
@@ -86,6 +97,7 @@
             margin-bottom: 8px;
             font-weight: bold;
             color: #333;
+            text-align: left;
         }
         
         .form-group input, .form-group select {
@@ -119,12 +131,22 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         .btn-danger {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
         }
         
         .btn-success {
             background: linear-gradient(135deg, #00b894 0%, #00a085 100%);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #fdcb6e 0%, #e17055 100%);
         }
         
         .user-info {
@@ -139,7 +161,7 @@
         
         .betting-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
@@ -151,6 +173,7 @@
             padding: 15px;
             text-align: center;
             transition: all 0.3s;
+            position: relative;
         }
         
         .day-card:hover {
@@ -200,7 +223,7 @@
         
         .bet-summary {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
         }
         
@@ -209,6 +232,17 @@
             border-left: 4px solid #667eea;
             padding: 15px;
             border-radius: 5px;
+            position: relative;
+        }
+        
+        .player-bet {
+            display: inline-block;
+            padding: 3px 8px;
+            margin: 2px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            color: white;
+            font-weight: bold;
         }
         
         .total-pool {
@@ -260,10 +294,19 @@
             background: white;
             border: 1px solid #ddd;
             border-radius: 5px;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+        }
+        
+        .student-coins {
+            background: #ffd700;
+            color: #333;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            margin: 5px 0;
         }
         
         .calendar-view {
@@ -285,6 +328,7 @@
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
         
         .calendar-day:hover {
@@ -301,8 +345,91 @@
             color: white;
         }
         
+        .calendar-bets {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            height: 4px;
+            display: flex;
+            gap: 1px;
+        }
+        
+        .bet-indicator {
+            height: 100%;
+            border-radius: 2px;
+            flex: 1;
+        }
+        
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+        
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.2);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
         .hidden {
             display: none !important;
+        }
+        
+        .profile-preview {
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .profile-color-demo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            border: 3px solid #333;
         }
         
         @media (max-width: 768px) {
@@ -317,14 +444,25 @@
             .tab {
                 padding: 10px 15px;
             }
+            
+            .calendar-view {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 1px;
+            }
+            
+            .calendar-day {
+                font-size: 10px;
+                padding: 2px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎓 Klassen Wettsystem</h1>
+            <h1>💰 G-Coin Wettsystem</h1>
             <p id="headerInfo">Willkommen zum Prüfungsrückgabe-Wettsystem</p>
+            <div id="coinDisplay" class="g-coin-display hidden">G-Coins: 0</div>
         </div>
         
         <div class="nav-tabs" id="navTabs">
@@ -332,26 +470,60 @@
         </div>
         
         <div class="content">
-            <!-- Login Screen -->
+            <!-- Login/Registration Screen -->
             <div id="loginTab" class="tab-content">
                 <div class="login-form">
-                    <h2>Login</h2>
-                    <div class="form-group">
-                        <label>Login-Link oder Benutzerdaten:</label>
-                        <input type="text" id="loginCode" placeholder="Login-Code eingeben">
+                    <div id="firstTimeLogin">
+                        <h2>Erstmaliges Login</h2>
+                        <p>Verwende deinen Login-Code um ein Konto zu erstellen:</p>
+                        <div class="form-group">
+                            <label>Login-Code:</label>
+                            <input type="text" id="loginCode" placeholder="Login-Code eingeben">
+                        </div>
+                        <button class="btn" onclick="verifyCode()">Code überprüfen</button>
                     </div>
-                    <div class="form-group">
-                        <input type="password" id="loginPassword" placeholder="Passwort (falls vorhanden)">
+                    
+                    <div id="createAccount" class="hidden">
+                        <h2>Konto erstellen</h2>
+                        <div class="form-group">
+                            <label>Benutzername:</label>
+                            <input type="text" id="newUsername" placeholder="Benutzername wählen">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort:</label>
+                            <input type="password" id="newPassword" placeholder="Passwort erstellen">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort bestätigen:</label>
+                            <input type="password" id="confirmPassword" placeholder="Passwort wiederholen">
+                        </div>
+                        <button class="btn" onclick="createAccount()">Konto erstellen</button>
+                        <button class="btn btn-danger" onclick="cancelRegistration()">Abbrechen</button>
                     </div>
-                    <button class="btn" onclick="performLogin()">Einloggen</button>
+                    
+                    <div id="normalLogin" class="hidden">
+                        <h2>Login</h2>
+                        <div class="form-group">
+                            <label>Benutzername:</label>
+                            <input type="text" id="username" placeholder="Benutzername">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort:</label>
+                            <input type="password" id="password" placeholder="Passwort">
+                        </div>
+                        <button class="btn" onclick="performLogin()">Einloggen</button>
+                        <button class="btn btn-warning" onclick="showFirstTimeLogin()">Ersten Login verwenden</button>
+                    </div>
                     
                     <hr style="margin: 30px 0;">
                     
-                    <h3>Admin Login</h3>
-                    <div class="form-group">
-                        <input type="password" id="adminPassword" placeholder="Admin-Passwort">
+                    <div id="adminLoginSection">
+                        <h3>Admin Login</h3>
+                        <div class="form-group">
+                            <input type="password" id="adminPassword" placeholder="Admin-Passwort">
+                        </div>
+                        <button class="btn btn-danger" onclick="adminLogin()">Als Admin einloggen</button>
                     </div>
-                    <button class="btn btn-danger" onclick="adminLogin()">Als Admin einloggen</button>
                 </div>
             </div>
             
@@ -372,6 +544,19 @@
                     </div>
                     
                     <div class="admin-section">
+                        <h3>💰 G-Coins verwalten</h3>
+                        <div class="form-group">
+                            <label>Schüler auswählen:</label>
+                            <select id="coinStudent"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>G-Coins hinzufügen:</label>
+                            <input type="number" id="coinAmount" min="1" placeholder="Anzahl G-Coins">
+                        </div>
+                        <button class="btn btn-success" onclick="addCoins()">G-Coins hinzufügen</button>
+                    </div>
+                    
+                    <div class="admin-section">
                         <h3>📅 Prüfungen verwalten</h3>
                         <div class="form-group">
                             <label>Fach:</label>
@@ -383,6 +568,10 @@
                                 <option value="Englisch">Englisch</option>
                                 <option value="Französisch">Französisch</option>
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prüfungstitel:</label>
+                            <input type="text" id="examTitle" placeholder="z.B. Quadratische Gleichungen">
                         </div>
                         <div class="form-group">
                             <label>Prüfungsdatum:</label>
@@ -399,8 +588,8 @@
                     <div class="admin-section">
                         <h3>🏆 Gewinner bestimmen</h3>
                         <div class="form-group">
-                            <label>Fach:</label>
-                            <select id="winnerSubject"></select>
+                            <label>Prüfung auswählen:</label>
+                            <select id="winnerExam"></select>
                         </div>
                         <div class="form-group">
                             <label>Gewinnertag:</label>
@@ -416,41 +605,34 @@
                 <div class="user-info">
                     <div>
                         <strong id="userName">Benutzer</strong>
-                        <br><span id="userStats">Statistiken werden geladen...</span>
+                        <div id="userCoins" class="student-coins">G-Coins: 0</div>
+                        <span id="userStats">Statistiken werden geladen...</span>
                     </div>
                     <button class="btn btn-danger" onclick="logout()">Logout</button>
                 </div>
                 
                 <div class="betting-section">
-                    <h3>📚 Fach auswählen:</h3>
+                    <h3>📚 Prüfung auswählen:</h3>
                     <div class="form-group">
-                        <select id="subjectSelect" onchange="loadSubjectData()">
-                            <option value="">Fach wählen...</option>
-                            <option value="Mathe">Mathe</option>
-                            <option value="Geschichte">Geschichte</option>
-                            <option value="Wirtschaft">Wirtschaft</option>
-                            <option value="Physik">Physik</option>
-                            <option value="Englisch">Englisch</option>
-                            <option value="Französisch">Französisch</option>
+                        <select id="examSelect" onchange="loadExamData()">
+                            <option value="">Prüfung wählen...</option>
                         </select>
                     </div>
                     
-                    <div id="subjectContent" class="hidden">
+                    <div id="examContent" class="hidden">
                         <div id="examInfo"></div>
                         
-                        <h4>📅 Wetten platzieren:</h4>
-                        <p>Wähle die Tage aus, an denen die Prüfung zurückgegeben werden könnte:</p>
-                        
+                        <h4>📅 Kalenderansicht:</h4>
                         <div class="calendar-view" id="calendarView"></div>
                         
+                        <h4>💰 Wetten platzieren:</h4>
                         <div class="betting-grid" id="bettingGrid"></div>
                         
                         <div class="form-group">
-                            <button class="btn" onclick="placeBets()">Wetten speichern</button>
-                            <button class="btn btn-danger" onclick="clearMyBets()">Meine Wetten löschen</button>
+                            <button class="btn" onclick="showBetConfirmation()">Wetten platzieren</button>
                         </div>
                         
-                        <div class="total-pool" id="totalPool">Gesamter Pot: 0.00 CHF</div>
+                        <div class="total-pool" id="totalPool">Gesamter Pot: 0 G-Coins</div>
                         
                         <div class="current-bets">
                             <h4>💰 Aktuelle Wetten:</h4>
@@ -461,6 +643,37 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content hidden">
+                <div class="profile-section">
+                    <h2>👤 Profil verwalten</h2>
+                    
+                    <div class="profile-preview">
+                        <div class="profile-color-demo" id="colorPreview"></div>
+                        <strong id="profileName">Benutzername</strong>
+                        <div>Deine Farbe im Kalender</div>
+                    </div>
+                    
+                    <h3>🎨 Farbe wählen:</h3>
+                    <div class="color-picker" id="colorPicker"></div>
+                    
+                    <div class="form-group">
+                        <button class="btn" onclick="saveProfile()">Profil speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bet Confirmation Modal -->
+    <div id="betModal" class="modal">
+        <div class="modal-content">
+            <h3>Wette bestätigen</h3>
+            <div id="betSummary"></div>
+            <p><strong>Achtung:</strong> Nach der Bestätigung kannst du diese Wetten nicht mehr ändern!</p>
+            <button class="btn btn-success" onclick="confirmBets()">Ja, Wette bestätigen</button>
+            <button class="btn btn-danger" onclick="closeBetModal()">Abbrechen</button>
         </div>
     </div>
 
@@ -468,32 +681,42 @@
         // Global state
         let currentUser = null;
         let isAdmin = false;
-        let currentSubject = null;
+        let currentExam = null;
         let selectedDates = [];
+        let currentUserData = null;
         
-        // Data storage (in real implementation, this would be on a server)
+        // Predefined colors for users
+        const userColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#F4D03F',
+            '#AED6F1', '#A9DFBF', '#F9E79F', '#D7A3F0', '#FFB347'
+        ];
+        
+        // Data storage
         let gameData = {
             students: [],
-            exams: {},
+            accounts: [], // New: stores username/password combinations
+            exams: [],
             bets: {},
             results: {},
+            userProfiles: {}, // New: stores user colors and preferences
             settings: {
-                adminPassword: 'admin123', // Change this!
-                maxBetPerPerson: 1.00
+                adminPassword: 'L.admin',
+                defaultCoins: 100
             }
         };
         
-        // Load data from localStorage
+        // Load/Save data
         function loadData() {
-            const saved = localStorage.getItem('klassenWettSystem');
+            const saved = localStorage.getItem('gCoinWettSystem');
             if (saved) {
                 gameData = {...gameData, ...JSON.parse(saved)};
             }
         }
         
-        // Save data to localStorage
         function saveData() {
-            localStorage.setItem('klassenWettSystem', JSON.stringify(gameData));
+            localStorage.setItem('gCoinWettSystem', JSON.stringify(gameData));
         }
         
         // Generate unique login code
@@ -517,6 +740,7 @@
         function updateNavigation() {
             const navTabs = document.getElementById('navTabs');
             const headerInfo = document.getElementById('headerInfo');
+            const coinDisplay = document.getElementById('coinDisplay');
             
             if (isAdmin) {
                 navTabs.innerHTML = `
@@ -524,36 +748,162 @@
                     <button class="tab" onclick="showTab('user')">Wettsystem</button>
                 `;
                 headerInfo.textContent = 'Admin-Bereich';
+                coinDisplay.classList.add('hidden');
                 showTab('admin');
+                loadAdminData();
             } else if (currentUser) {
                 navTabs.innerHTML = `
                     <button class="tab active" onclick="showTab('user')">Wettsystem</button>
+                    <button class="tab" onclick="showTab('profile')">Profil</button>
                 `;
                 headerInfo.textContent = `Willkommen, ${currentUser}!`;
+                coinDisplay.classList.remove('hidden');
                 showTab('user');
                 updateUserInfo();
+                loadUserExams();
+                initializeUserProfile();
             } else {
                 navTabs.innerHTML = `
                     <button class="tab active" onclick="showTab('login')">Login</button>
                 `;
                 headerInfo.textContent = 'Bitte einloggen';
+                coinDisplay.classList.add('hidden');
+                showLoginState();
             }
         }
         
-        // Login functions
-        function performLogin() {
-            const code = document.getElementById('loginCode').value.trim().toUpperCase();
-            const password = document.getElementById('loginPassword').value;
+        // Login state management
+        function showLoginState() {
+            // Check if user has already registered
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
             
+            if (code) {
+                // Show first time login
+                showFirstTimeLogin();
+                document.getElementById('loginCode').value = code.toUpperCase();
+            } else {
+                // Check if there are any registered accounts
+                if (gameData.accounts.length > 0) {
+                    showNormalLogin();
+                } else {
+                    showFirstTimeLogin();
+                }
+            }
+        }
+        
+        function showFirstTimeLogin() {
+            document.getElementById('firstTimeLogin').classList.remove('hidden');
+            document.getElementById('createAccount').classList.add('hidden');
+            document.getElementById('normalLogin').classList.add('hidden');
+        }
+        
+        function showNormalLogin() {
+            document.getElementById('firstTimeLogin').classList.add('hidden');
+            document.getElementById('createAccount').classList.add('hidden');
+            document.getElementById('normalLogin').classList.remove('hidden');
+        }
+        
+        function showCreateAccount() {
+            document.getElementById('firstTimeLogin').classList.add('hidden');
+            document.getElementById('createAccount').classList.remove('hidden');
+            document.getElementById('normalLogin').classList.add('hidden');
+        }
+        
+        // Registration and login functions
+        function verifyCode() {
+            const code = document.getElementById('loginCode').value.trim().toUpperCase();
             const student = gameData.students.find(s => s.code === code);
+            
             if (student) {
-                currentUser = student.name;
-                isAdmin = false;
-                updateNavigation();
-                document.getElementById('loginCode').value = '';
-                document.getElementById('loginPassword').value = '';
+                // Check if already registered
+                const existingAccount = gameData.accounts.find(a => a.originalName === student.name);
+                if (existingAccount) {
+                    alert('Dieser Code wurde bereits verwendet. Bitte verwende den normalen Login.');
+                    showNormalLogin();
+                    return;
+                }
+                
+                showCreateAccount();
+                // Remove code from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             } else {
                 alert('Ungültiger Login-Code!');
+            }
+        }
+        
+        function createAccount() {
+            const code = document.getElementById('loginCode').value.trim().toUpperCase();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!username || !password) {
+                alert('Bitte alle Felder ausfüllen!');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwörter stimmen nicht überein!');
+                return;
+            }
+            
+            if (gameData.accounts.find(a => a.username === username)) {
+                alert('Benutzername bereits vergeben!');
+                return;
+            }
+            
+            const student = gameData.students.find(s => s.code === code);
+            if (!student) {
+                alert('Ungültiger Login-Code!');
+                return;
+            }
+            
+            // Create account
+            gameData.accounts.push({
+                username: username,
+                password: password,
+                originalName: student.name,
+                coins: gameData.settings.defaultCoins,
+                totalWins: 0,
+                totalBets: 0
+            });
+            
+            // Initialize user profile
+            gameData.userProfiles[username] = {
+                color: userColors[gameData.accounts.length - 1] || '#667eea',
+                displayName: username
+            };
+            
+            saveData();
+            
+            // Auto login
+            currentUser = username;
+            currentUserData = gameData.accounts.find(a => a.username === username);
+            isAdmin = false;
+            updateNavigation();
+            
+            // Clear form
+            document.getElementById('loginCode').value = '';
+            document.getElementById('newUsername').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        }
+        
+        function performLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            const account = gameData.accounts.find(a => a.username === username && a.password === password);
+            if (account) {
+                currentUser = username;
+                currentUserData = account;
+                isAdmin = false;
+                updateNavigation();
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                alert('Ungültiger Benutzername oder Passwort!');
             }
         }
         
@@ -563,17 +913,22 @@
                 currentUser = 'Admin';
                 isAdmin = true;
                 updateNavigation();
-                loadAdminData();
                 document.getElementById('adminPassword').value = '';
             } else {
                 alert('Falsches Admin-Passwort!');
             }
         }
         
+        function cancelRegistration() {
+            showFirstTimeLogin();
+            document.getElementById('loginCode').value = '';
+        }
+        
         function logout() {
             currentUser = null;
+            currentUserData = null;
             isAdmin = false;
-            currentSubject = null;
+            currentExam = null;
             updateNavigation();
             showTab('login');
         }
@@ -593,9 +948,7 @@
             
             const student = {
                 name: name,
-                code: generateLoginCode(name),
-                totalWins: 0,
-                totalBets: 0
+                code: generateLoginCode(name)
             };
             
             gameData.students.push(student);
@@ -627,82 +980,118 @@
         function removeStudent(name) {
             if (confirm(`Schüler ${name} wirklich löschen?`)) {
                 gameData.students = gameData.students.filter(s => s.name !== name);
-                // Remove all bets for this student
-                Object.keys(gameData.bets).forEach(subject => {
-                    Object.keys(gameData.bets[subject]).forEach(date => {
-                        gameData.bets[subject][date] = gameData.bets[subject][date].filter(bet => bet.student !== name);
-                    });
-                });
+                // Also remove account if exists
+                const account = gameData.accounts.find(a => a.originalName === name);
+                if (account) {
+                    gameData.accounts = gameData.accounts.filter(a => a.originalName !== name);
+                    delete gameData.userProfiles[account.username];
+                }
                 saveData();
                 loadAdminData();
             }
         }
         
-        function addExam() {
-            const subject = document.getElementById('examSubject').value;
-            const examDate = document.getElementById('examDate').value;
-            const returnDate = document.getElementById('returnDate').value;
+        function addCoins() {
+            const studentSelect = document.getElementById('coinStudent');
+            const amount = parseInt(document.getElementById('coinAmount').value);
+            const username = studentSelect.value;
             
-            if (!subject || !examDate) {
-                alert('Bitte Fach und Prüfungsdatum eingeben!');
+            if (!username || !amount || amount < 1) {
+                alert('Bitte Schüler und gültige Anzahl G-Coins eingeben!');
                 return;
             }
             
-            if (!gameData.exams[subject]) {
-                gameData.exams[subject] = [];
+            const account = gameData.accounts.find(a => a.username === username);
+            if (account) {
+                account.coins += amount;
+                saveData();
+                loadAdminData();
+                document.getElementById('coinAmount').value = '';
+                alert(`${amount} G-Coins zu ${username} hinzugefügt!`);
+            }
+        }
+        
+        function addExam() {
+            const subject = document.getElementById('examSubject').value;
+            const title = document.getElementById('examTitle').value.trim();
+            const examDate = document.getElementById('examDate').value;
+            const returnDate = document.getElementById('returnDate').value;
+            
+            if (!subject || !title || !examDate) {
+                alert('Bitte Fach, Titel und Prüfungsdatum eingeben!');
+                return;
             }
             
-            gameData.exams[subject].push({
+            const exam = {
+                id: Date.now(),
+                subject: subject,
+                title: title,
                 examDate: examDate,
                 returnDate: returnDate || null,
                 status: returnDate ? 'returned' : 'pending'
-            });
+            };
             
+            gameData.exams.push(exam);
             saveData();
             loadAdminData();
+            
+            // Clear form
+            document.getElementById('examTitle').value = '';
             document.getElementById('examDate').value = '';
             document.getElementById('returnDate').value = '';
+            
             alert('Prüfung hinzugefügt!');
         }
         
         function loadAdminData() {
             // Load student list
             const studentList = document.getElementById('studentList');
-            studentList.innerHTML = gameData.students.map(student => `
-                <div class="student-item">
-                    <div>
-                        <strong>${student.name}</strong><br>
-                        <small>Code: ${student.code} | Siege: ${student.totalWins} | Wetten: ${student.totalBets}</small>
+            studentList.innerHTML = gameData.students.map(student => {
+                const account = gameData.accounts.find(a => a.originalName === student.name);
+                return `
+                    <div class="student-item">
+                        <div>
+                            <strong>${student.name}</strong>
+                            ${account ? `<br><small>Username: ${account.username}</small>` : '<br><small>Noch nicht registriert</small>'}
+                            <br><small>Code: ${student.code}</small>
+                            ${account ? `<div class="student-coins">G-Coins: ${account.coins}</div>` : ''}
+                        </div>
+                        <button class="btn btn-danger" onclick="removeStudent('${student.name}')">Löschen</button>
                     </div>
-                    <button class="btn btn-danger" onclick="removeStudent('${student.name}')">Löschen</button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+            
+            // Load coin management dropdown
+            const coinStudent = document.getElementById('coinStudent');
+            coinStudent.innerHTML = '<option value="">Schüler wählen...</option>' + 
+                gameData.accounts.map(account => `<option value="${account.username}">${account.username} (${account.coins} G-Coins)</option>`).join('');
             
             // Load exam list
             const examList = document.getElementById('examList');
-            let examHtml = '';
-            Object.keys(gameData.exams).forEach(subject => {
-                examHtml += `<h4>${subject}:</h4>`;
-                gameData.exams[subject].forEach((exam, index) => {
-                    examHtml += `<p>Prüfung: ${exam.examDate} | Status: ${exam.status === 'returned' ? 'Zurückgegeben am ' + exam.returnDate : 'Ausstehend'}</p>`;
-                });
+            let examHtml = '<h4>Alle Prüfungen:</h4>';
+            gameData.exams.forEach(exam => {
+                examHtml += `<p><strong>${exam.subject}:</strong> ${exam.title} | Prüfung: ${exam.examDate} | Status: ${exam.status === 'returned' ? 'Zurückgegeben am ' + exam.returnDate : 'Ausstehend'}</p>`;
             });
-            examList.innerHTML = examHtml || '<p>Keine Prüfungen eingetragen.</p>';
+            examList.innerHTML = examHtml;
             
-            // Load winner subject options
-            const winnerSubject = document.getElementById('winnerSubject');
-            winnerSubject.innerHTML = '<option value="">Fach wählen...</option>' + 
-                Object.keys(gameData.exams).map(subject => `<option value="${subject}">${subject}</option>`).join('');
+            // Load winner exam options
+            const winnerExam = document.getElementById('winnerExam');
+            winnerExam.innerHTML = '<option value="">Prüfung wählen...</option>' + 
+                gameData.exams.filter(exam => exam.status === 'pending').map(exam => 
+                    `<option value="${exam.id}">${exam.subject}: ${exam.title}</option>`
+                ).join('');
         }
         
         function clearAllData() {
             if (confirm('Wirklich ALLE Daten löschen? Dies kann nicht rückgängig gemacht werden!')) {
-                if (confirm('Letzte Warnung: Alle Schüler, Wetten und Prüfungen werden gelöscht!')) {
+                if (confirm('Letzte Warnung: Alle Schüler, Konten, Wetten und Prüfungen werden gelöscht!')) {
                     gameData = {
                         students: [],
-                        exams: {},
+                        accounts: [],
+                        exams: [],
                         bets: {},
                         results: {},
+                        userProfiles: {},
                         settings: gameData.settings
                     };
                     saveData();
@@ -714,72 +1103,87 @@
         
         // User functions
         function updateUserInfo() {
-            const student = gameData.students.find(s => s.name === currentUser);
-            if (student) {
-                document.getElementById('userName').textContent = student.name;
+            if (currentUserData) {
+                document.getElementById('userName').textContent = currentUser;
+                document.getElementById('userCoins').textContent = `G-Coins: ${currentUserData.coins}`;
+                document.getElementById('coinDisplay').textContent = `G-Coins: ${currentUserData.coins}`;
                 document.getElementById('userStats').textContent = 
-                    `Siege: ${student.totalWins} | Gesamte Wetten: ${student.totalBets}`;
+                    `Siege: ${currentUserData.totalWins} | Gesamte Wetten: ${currentUserData.totalBets}`;
             }
         }
         
-        function loadSubjectData() {
-            currentSubject = document.getElementById('subjectSelect').value;
-            if (!currentSubject) {
-                document.getElementById('subjectContent').classList.add('hidden');
+        function loadUserExams() {
+            const examSelect = document.getElementById('examSelect');
+            examSelect.innerHTML = '<option value="">Prüfung wählen...</option>' + 
+                gameData.exams.filter(exam => exam.status === 'pending').map(exam => 
+                    `<option value="${exam.id}">${exam.subject}: ${exam.title}</option>`
+                ).join('');
+        }
+        
+        function loadExamData() {
+            const examId = parseInt(document.getElementById('examSelect').value);
+            if (!examId) {
+                document.getElementById('examContent').classList.add('hidden');
                 return;
             }
             
-            document.getElementById('subjectContent').classList.remove('hidden');
+            currentExam = gameData.exams.find(exam => exam.id === examId);
+            if (!currentExam) return;
             
-            // Load exam info
+            document.getElementById('examContent').classList.remove('hidden');
+            
+            // Show exam info
             const examInfo = document.getElementById('examInfo');
-            const exams = gameData.exams[currentSubject] || [];
-            if (exams.length > 0) {
-                const latestExam = exams[exams.length - 1];
-                examInfo.innerHTML = `
-                    <div class="exam-info">
-                        📝 Letzte ${currentSubject}-Prüfung: ${latestExam.examDate} 
-                        ${latestExam.status === 'returned' ? '✅ Zurückgegeben am ' + latestExam.returnDate : '⏳ Noch nicht zurück'}
-                    </div>
-                `;
-            } else {
-                examInfo.innerHTML = '<p>Keine Prüfungen für dieses Fach eingetragen.</p>';
-            }
+            examInfo.innerHTML = `
+                <div class="exam-info">
+                    📝 ${currentExam.subject}: ${currentExam.title} (Prüfung am ${currentExam.examDate})
+                    ${currentExam.status === 'returned' ? '✅ Zurückgegeben am ' + currentExam.returnDate : '⏳ Noch nicht zurück'}
+                </div>
+            `;
             
             generateCalendar();
-            updateBettingDisplay();
             updateCurrentBets();
         }
         
         function generateCalendar() {
             const calendar = document.getElementById('calendarView');
             const today = new Date();
-            const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            
             let calendarHtml = '';
             
             // Generate next 4 weeks
             for (let i = 0; i < 28; i++) {
                 const date = new Date(today);
                 date.setDate(today.getDate() + i);
-                
                 const dateStr = date.toISOString().split('T')[0];
                 const dayName = date.toLocaleDateString('de-DE', { weekday: 'short' });
                 const dayNum = date.getDate();
                 
-                const hasExam = false; // You can add logic to check if there's an exam
-                const isSelected = selectedDates.includes(dateStr);
+                // Check if there are bets for this day
+                const dayBets = gameData.bets[currentExam.id] && gameData.bets[currentExam.id][dateStr] ? 
+                              gameData.bets[currentExam.id][dateStr] : [];
+                
+                let betIndicators = '';
+                if (dayBets.length > 0) {
+                    betIndicators = '<div class="calendar-bets">';
+                    dayBets.forEach(bet => {
+                        const userColor = gameData.userProfiles[bet.username]?.color || '#667eea';
+                        betIndicators += `<div class="bet-indicator" style="background-color: ${userColor}" title="${bet.username}: ${bet.amount} G-Coins"></div>`;
+                    });
+                    betIndicators += '</div>';
+                }
                 
                 calendarHtml += `
-                    <div class="calendar-day ${hasExam ? 'has-exam' : ''} ${isSelected ? 'selected' : ''}" 
+                    <div class="calendar-day ${selectedDates.includes(dateStr) ? 'selected' : ''}" 
                          onclick="toggleDate('${dateStr}')">
                         <div>${dayName}</div>
                         <div>${dayNum}</div>
+                        ${betIndicators}
                     </div>
                 `;
             }
             
             calendar.innerHTML = calendarHtml;
+            updateBettingDisplay();
         }
         
         function toggleDate(dateStr) {
@@ -789,9 +1193,7 @@
             } else {
                 selectedDates.push(dateStr);
             }
-            
             generateCalendar();
-            updateBettingDisplay();
         }
         
         function updateBettingDisplay() {
@@ -808,6 +1210,9 @@
                 const dayName = date.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
                 
                 const currentBet = getCurrentBet(dateStr);
+                const totalPool = getTotalPool();
+                const dayTotal = getDayTotal(dateStr);
+                const odds = dayTotal > 0 ? (totalPool / dayTotal) : 1;
                 
                 gridHtml += `
                     <div class="day-card">
@@ -815,50 +1220,35 @@
                         <input type="number" 
                                class="bet-input" 
                                id="bet-${dateStr}" 
-                               min="0" 
-                               max="1" 
-                               step="0.1" 
+                               min="1" 
+                               max="${currentUserData.coins}"
+                               step="1" 
                                value="${currentBet}"
-                               placeholder="0.00">
-                        <div class="odds" id="odds-${dateStr}">Quote: 1.0x</div>
+                               placeholder="G-Coins">
+                        <div class="odds">Quote: ${odds.toFixed(2)}x</div>
                     </div>
                 `;
             });
             
             bettingGrid.innerHTML = gridHtml;
-            updateOdds();
+            updateTotalPool();
         }
         
         function getCurrentBet(dateStr) {
-            if (!gameData.bets[currentSubject] || !gameData.bets[currentSubject][dateStr]) {
+            if (!gameData.bets[currentExam.id] || !gameData.bets[currentExam.id][dateStr]) {
                 return '';
             }
             
-            const bet = gameData.bets[currentSubject][dateStr].find(b => b.student === currentUser);
+            const bet = gameData.bets[currentExam.id][dateStr].find(b => b.username === currentUser);
             return bet ? bet.amount : '';
         }
         
-        function updateOdds() {
-            selectedDates.forEach(dateStr => {
-                const totalPool = getTotalPool();
-                const dayTotal = getDayTotal(dateStr);
-                const odds = dayTotal > 0 ? (totalPool / dayTotal) : 1;
-                
-                const oddsElement = document.getElementById(`odds-${dateStr}`);
-                if (oddsElement) {
-                    oddsElement.textContent = `Quote: ${odds.toFixed(2)}x`;
-                }
-            });
-            
-            document.getElementById('totalPool').textContent = `Gesamter Pot: ${getTotalPool().toFixed(2)} CHF`;
-        }
-        
         function getTotalPool() {
-            if (!gameData.bets[currentSubject]) return 0;
+            if (!gameData.bets[currentExam.id]) return 0;
             
             let total = 0;
-            Object.keys(gameData.bets[currentSubject]).forEach(date => {
-                gameData.bets[currentSubject][date].forEach(bet => {
+            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
+                gameData.bets[currentExam.id][date].forEach(bet => {
                     total += bet.amount;
                 });
             });
@@ -866,24 +1256,62 @@
         }
         
         function getDayTotal(dateStr) {
-            if (!gameData.bets[currentSubject] || !gameData.bets[currentSubject][dateStr]) return 0;
+            if (!gameData.bets[currentExam.id] || !gameData.bets[currentExam.id][dateStr]) return 0;
             
-            return gameData.bets[currentSubject][dateStr].reduce((sum, bet) => sum + bet.amount, 0);
+            return gameData.bets[currentExam.id][dateStr].reduce((sum, bet) => sum + bet.amount, 0);
         }
         
-        function placeBets() {
-            if (!currentSubject) {
-                alert('Bitte wähle erst ein Fach aus!');
+        function updateTotalPool() {
+            document.getElementById('totalPool').textContent = `Gesamter Pot: ${getTotalPool()} G-Coins`;
+        }
+        
+        function showBetConfirmation() {
+            if (!currentExam) {
+                alert('Bitte wähle erst eine Prüfung aus!');
                 return;
             }
             
+            let totalBet = 0;
+            let betSummary = '<h4>Deine Wetten:</h4>';
+            const newBets = {};
+            
+            selectedDates.forEach(dateStr => {
+                const betInput = document.getElementById(`bet-${dateStr}`);
+                if (betInput) {
+                    const amount = parseInt(betInput.value) || 0;
+                    if (amount > 0) {
+                        newBets[dateStr] = amount;
+                        totalBet += amount;
+                        const date = new Date(dateStr);
+                        const dayName = date.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+                        betSummary += `<p>${dayName}: ${amount} G-Coins</p>`;
+                    }
+                }
+            });
+            
+            if (totalBet === 0) {
+                alert('Bitte platziere mindestens eine Wette!');
+                return;
+            }
+            
+            if (totalBet > currentUserData.coins) {
+                alert(`Du hast nicht genug G-Coins! Du hast ${currentUserData.coins}, benötigst aber ${totalBet}.`);
+                return;
+            }
+            
+            betSummary += `<p><strong>Gesamt: ${totalBet} G-Coins</strong></p>`;
+            document.getElementById('betSummary').innerHTML = betSummary;
+            document.getElementById('betModal').style.display = 'block';
+        }
+        
+        function confirmBets() {
             let totalBet = 0;
             const newBets = {};
             
             selectedDates.forEach(dateStr => {
                 const betInput = document.getElementById(`bet-${dateStr}`);
                 if (betInput) {
-                    const amount = parseFloat(betInput.value) || 0;
+                    const amount = parseInt(betInput.value) || 0;
                     if (amount > 0) {
                         newBets[dateStr] = amount;
                         totalBet += amount;
@@ -891,84 +1319,64 @@
                 }
             });
             
-            if (totalBet > gameData.settings.maxBetPerPerson) {
-                alert(`Maximaler Gesamteinsatz ist ${gameData.settings.maxBetPerPerson.toFixed(2)} CHF!`);
-                return;
-            }
-            
-            if (totalBet === 0) {
-                alert('Bitte platziere mindestens eine Wette!');
-                return;
-            }
+            // Deduct coins
+            currentUserData.coins -= totalBet;
+            currentUserData.totalBets += totalBet;
             
             // Initialize data structures
-            if (!gameData.bets[currentSubject]) {
-                gameData.bets[currentSubject] = {};
+            if (!gameData.bets[currentExam.id]) {
+                gameData.bets[currentExam.id] = {};
             }
             
-            // Remove existing bets for this user
-            Object.keys(gameData.bets[currentSubject]).forEach(date => {
-                gameData.bets[currentSubject][date] = gameData.bets[currentSubject][date].filter(bet => bet.student !== currentUser);
+            // Remove existing bets for this user on this exam
+            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
+                gameData.bets[currentExam.id][date] = gameData.bets[currentExam.id][date].filter(bet => bet.username !== currentUser);
             });
             
             // Add new bets
             Object.keys(newBets).forEach(date => {
-                if (!gameData.bets[currentSubject][date]) {
-                    gameData.bets[currentSubject][date] = [];
+                if (!gameData.bets[currentExam.id][date]) {
+                    gameData.bets[currentExam.id][date] = [];
                 }
                 
-                gameData.bets[currentSubject][date].push({
-                    student: currentUser,
+                gameData.bets[currentExam.id][date].push({
+                    username: currentUser,
                     amount: newBets[date]
                 });
             });
             
-            // Update student stats
-            const student = gameData.students.find(s => s.name === currentUser);
-            if (student) {
-                student.totalBets += totalBet;
-            }
-            
             saveData();
             updateUserInfo();
-            updateOdds();
+            generateCalendar();
             updateCurrentBets();
-            alert('Wetten wurden gespeichert!');
+            closeBetModal();
+            
+            // Clear selection and inputs
+            selectedDates = [];
+            selectedDates.forEach(dateStr => {
+                const betInput = document.getElementById(`bet-${dateStr}`);
+                if (betInput) betInput.value = '';
+            });
+            
+            alert('Wetten wurden bestätigt und können nicht mehr geändert werden!');
         }
         
-        function clearMyBets() {
-            if (!currentSubject) return;
-            
-            if (confirm('Alle deine Wetten für ' + currentSubject + ' löschen?')) {
-                if (gameData.bets[currentSubject]) {
-                    Object.keys(gameData.bets[currentSubject]).forEach(date => {
-                        gameData.bets[currentSubject][date] = gameData.bets[currentSubject][date].filter(bet => bet.student !== currentUser);
-                    });
-                }
-                
-                saveData();
-                selectedDates.forEach(dateStr => {
-                    const betInput = document.getElementById(`bet-${dateStr}`);
-                    if (betInput) betInput.value = '';
-                });
-                updateOdds();
-                updateCurrentBets();
-                alert('Deine Wetten wurden gelöscht!');
-            }
+        function closeBetModal() {
+            document.getElementById('betModal').style.display = 'none';
         }
         
         function updateCurrentBets() {
             const container = document.getElementById('currentBets');
             
-            if (!gameData.bets[currentSubject]) {
-                container.innerHTML = '<p>Noch keine Wetten für dieses Fach.</p>';
+            if (!gameData.bets[currentExam.id]) {
+                container.innerHTML = '<p>Noch keine Wetten für diese Prüfung.</p>';
                 return;
             }
             
             let html = '<div class="bet-summary">';
             
-            Object.keys(gameData.bets[currentSubject]).forEach(date => {
-                const bets = gameData.bets[currentSubject][date];
+            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
+                const bets = gameData.bets[currentExam.id][date];
                 if (bets.length > 0) {
                     const dateObj = new Date(date);
                     const dayName = dateObj.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -976,9 +1384,14 @@
                     
                     html += `<div class="bet-card">
                         <strong>${dayName}</strong><br>
-                        <small>Gesamt: ${dayTotal.toFixed(2)} CHF</small><br>
-                        ${bets.map(bet => `${bet.student}: ${bet.amount.toFixed(2)} CHF`).join('<br>')}
-                    </div>`;
+                        <small>Gesamt: ${dayTotal} G-Coins</small><br>`;
+                    
+                    bets.forEach(bet => {
+                        const userColor = gameData.userProfiles[bet.username]?.color || '#667eea';
+                        html += `<span class="player-bet" style="background-color: ${userColor}">${bet.username}: ${bet.amount}</span> `;
+                    });
+                    
+                    html += '</div>';
                 }
             });
             
@@ -987,78 +1400,109 @@
         }
         
         function determineWinners() {
-            const subject = document.getElementById('winnerSubject').value;
+            const examId = parseInt(document.getElementById('winnerExam').value);
             const winDate = document.getElementById('winnerDate').value;
             
-            if (!subject || !winDate) {
-                alert('Bitte Fach und Datum auswählen!');
+            if (!examId || !winDate) {
+                alert('Bitte Prüfung und Datum auswählen!');
                 return;
             }
             
-            if (!gameData.bets[subject] || !gameData.bets[subject][winDate]) {
+            const exam = gameData.exams.find(e => e.id === examId);
+            if (!exam) return;
+            
+            if (!gameData.bets[examId] || !gameData.bets[examId][winDate]) {
                 alert('Keine Wetten für diesen Tag gefunden!');
                 return;
             }
             
-            const winners = gameData.bets[subject][winDate];
-            const totalPool = getTotalPoolForSubject(subject);
+            const winners = gameData.bets[examId][winDate];
+            const totalPool = getTotalPoolForExam(examId);
             const winnerTotal = winners.reduce((sum, bet) => sum + bet.amount, 0);
             
-            let resultsHtml = `<div class="winner-announcement">
-                🎉 Gewinner für ${subject} am ${new Date(winDate).toLocaleDateString('de-DE')} 🎉
-            </div><h4>Auszahlungen:</h4>`;
+            // Update exam status
+            exam.returnDate = winDate;
+            exam.status = 'returned';
             
+            // Calculate and distribute winnings
             winners.forEach(winner => {
-                const payout = (winner.amount / winnerTotal) * totalPool;
-                const profit = payout - winner.amount;
-                
-                resultsHtml += `<div class="bet-card">
-                    <strong>${winner.student}</strong><br>
-                    Einsatz: ${winner.amount.toFixed(2)} CHF<br>
-                    Auszahlung: ${payout.toFixed(2)} CHF<br>
-                    <span style="color: ${profit > 0 ? 'green' : 'red'}">
-                        Gewinn: ${profit > 0 ? '+' : ''}${profit.toFixed(2)} CHF
-                    </span>
-                </div>`;
-                
-                // Update winner stats
-                const student = gameData.students.find(s => s.name === winner.student);
-                if (student) {
-                    student.totalWins += profit;
+                const payout = Math.floor((winner.amount / winnerTotal) * totalPool);
+                const account = gameData.accounts.find(a => a.username === winner.username);
+                if (account) {
+                    account.coins += payout;
+                    account.totalWins += (payout - winner.amount);
                 }
             });
             
-            // Store results
-            if (!gameData.results[subject]) {
-                gameData.results[subject] = [];
-            }
-            
-            gameData.results[subject].push({
-                date: winDate,
-                winners: winners,
-                totalPool: totalPool
-            });
-            
             saveData();
-            alert('Gewinner wurden berechnet und gespeichert!');
-            
-            // Show results to users (you might want to implement a notification system)
-            if (document.getElementById('results')) {
-                document.getElementById('results').innerHTML = resultsHtml;
-                document.getElementById('results').classList.remove('hidden');
-            }
+            loadAdminData();
+            alert(`Gewinner für ${exam.subject}: ${exam.title} wurden berechnet und G-Coins ausgezahlt!`);
         }
         
-        function getTotalPoolForSubject(subject) {
-            if (!gameData.bets[subject]) return 0;
+        function getTotalPoolForExam(examId) {
+            if (!gameData.bets[examId]) return 0;
             
             let total = 0;
-            Object.keys(gameData.bets[subject]).forEach(date => {
-                gameData.bets[subject][date].forEach(bet => {
+            Object.keys(gameData.bets[examId]).forEach(date => {
+                gameData.bets[examId][date].forEach(bet => {
                     total += bet.amount;
                 });
             });
             return total;
+        }
+        
+        // Profile management
+        function initializeUserProfile() {
+            if (!gameData.userProfiles[currentUser]) {
+                gameData.userProfiles[currentUser] = {
+                    color: userColors[gameData.accounts.length - 1] || '#667eea',
+                    displayName: currentUser
+                };
+                saveData();
+            }
+            
+            loadProfile();
+        }
+        
+        function loadProfile() {
+            const profile = gameData.userProfiles[currentUser];
+            document.getElementById('profileName').textContent = currentUser;
+            document.getElementById('colorPreview').style.backgroundColor = profile.color;
+            
+            // Generate color picker
+            const colorPicker = document.getElementById('colorPicker');
+            colorPicker.innerHTML = userColors.map(color => `
+                <div class="color-option ${profile.color === color ? 'selected' : ''}" 
+                     style="background-color: ${color}" 
+                     onclick="selectColor('${color}')"></div>
+            `).join('');
+        }
+        
+        function selectColor(color) {
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('colorPreview').style.backgroundColor = color;
+        }
+        
+        function saveProfile() {
+            const selectedColor = document.querySelector('.color-option.selected');
+            if (selectedColor) {
+                const color = selectedColor.style.backgroundColor;
+                // Convert rgb to hex
+                const rgb = color.match(/\d+/g);
+                const hex = rgb ? `#${rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('')}` : color;
+                
+                gameData.userProfiles[currentUser].color = hex;
+                saveData();
+                alert('Profil gespeichert!');
+                
+                // Refresh calendar if on user tab
+                if (currentExam) {
+                    generateCalendar();
+                }
+            }
         }
         
         // Initialize app
@@ -1069,19 +1513,18 @@
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             if (code) {
-                const student = gameData.students.find(s => s.code === code.toUpperCase());
-                if (student) {
-                    currentUser = student.name;
-                    isAdmin = false;
-                    updateNavigation();
-                    // Remove code from URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } else {
-                    alert('Ungültiger Login-Code in der URL!');
-                }
+                // Don't auto-login, just show the first time login form
             }
             
             updateNavigation();
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                const modal = document.getElementById('betModal');
+                if (event.target === modal) {
+                    closeBetModal();
+                }
+            }
         }
         
         // Start the app
