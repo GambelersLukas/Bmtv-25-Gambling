@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G-Coin Wettsystem</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -345,6 +346,18 @@
             color: white;
         }
         
+        .calendar-day.disabled {
+            background-color: #f0f0f0 !important;
+            color: #999 !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+        }
+        
+        .calendar-day.disabled:hover {
+            background-color: #f0f0f0 !important;
+            transform: none !important;
+        }
+        
         .calendar-bets {
             position: absolute;
             bottom: 2px;
@@ -432,6 +445,23 @@
             border: 3px solid #333;
         }
         
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .loading::after {
+            content: "...";
+            animation: dots 1s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: "."; }
+            40% { content: ".."; }
+            60%, 100% { content: "..."; }
+        }
+        
         @media (max-width: 768px) {
             .betting-grid {
                 grid-template-columns: 1fr 1fr;
@@ -470,10 +500,29 @@
         </div>
         
         <div class="content">
+            <!-- Loading Screen -->
+            <div id="loadingScreen" class="loading">
+                Lade Daten aus der Datenbank
+            </div>
+            
             <!-- Login/Registration Screen -->
-            <div id="loginTab" class="tab-content">
+            <div id="loginTab" class="tab-content hidden">
                 <div class="login-form">
-                    <div id="firstTimeLogin">
+                    <div id="normalLogin">
+                        <h2>Login</h2>
+                        <div class="form-group">
+                            <label>Benutzername:</label>
+                            <input type="text" id="username" placeholder="Benutzername">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort:</label>
+                            <input type="password" id="password" placeholder="Passwort">
+                        </div>
+                        <button class="btn" onclick="performLogin()">Einloggen</button>
+                        <button class="btn btn-warning" onclick="showFirstTimeLogin()">Ersten Login verwenden</button>
+                    </div>
+                    
+                    <div id="firstTimeLogin" class="hidden">
                         <h2>Erstmaliges Login</h2>
                         <p>Verwende deinen Login-Code um ein Konto zu erstellen:</p>
                         <div class="form-group">
@@ -481,6 +530,7 @@
                             <input type="text" id="loginCode" placeholder="Login-Code eingeben">
                         </div>
                         <button class="btn" onclick="verifyCode()">Code überprüfen</button>
+                        <button class="btn btn-warning" onclick="showNormalLogin()">Zurück zum Login</button>
                     </div>
                     
                     <div id="createAccount" class="hidden">
@@ -499,20 +549,6 @@
                         </div>
                         <button class="btn" onclick="createAccount()">Konto erstellen</button>
                         <button class="btn btn-danger" onclick="cancelRegistration()">Abbrechen</button>
-                    </div>
-                    
-                    <div id="normalLogin" class="hidden">
-                        <h2>Login</h2>
-                        <div class="form-group">
-                            <label>Benutzername:</label>
-                            <input type="text" id="username" placeholder="Benutzername">
-                        </div>
-                        <div class="form-group">
-                            <label>Passwort:</label>
-                            <input type="password" id="password" placeholder="Passwort">
-                        </div>
-                        <button class="btn" onclick="performLogin()">Einloggen</button>
-                        <button class="btn btn-warning" onclick="showFirstTimeLogin()">Ersten Login verwenden</button>
                     </div>
                     
                     <hr style="margin: 30px 0;">
@@ -678,12 +714,29 @@
     </div>
 
     <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://wjunjakkqsktdoisokci.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdW5qYWtrcXNrdGRvaXNva2NpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTI1ODYsImV4cCI6MjA3NDM2ODU4Nn0.qMT-ZuKX6F3DYoAml3nf48WT8bL8GfWQvwxoOEfBiwI';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
         // Global state
         let currentUser = null;
         let isAdmin = false;
         let currentExam = null;
         let selectedDates = [];
         let currentUserData = null;
+        let gameData = {
+            students: [],
+            accounts: [],
+            exams: [],
+            userProfiles: {},
+            settings: {
+                adminPassword: 'L.admin',
+                defaultCoins: 100
+            }
+        };
         
         // Predefined colors for users
         const userColors = [
@@ -693,30 +746,77 @@
             '#AED6F1', '#A9DFBF', '#F9E79F', '#D7A3F0', '#FFB347'
         ];
         
-        // Data storage
-        let gameData = {
-            students: [],
-            accounts: [], // New: stores username/password combinations
-            exams: [],
-            bets: {},
-            results: {},
-            userProfiles: {}, // New: stores user colors and preferences
-            settings: {
-                adminPassword: 'L.admin',
-                defaultCoins: 100
-            }
-        };
-        
-        // Load/Save data
-        function loadData() {
-            const saved = localStorage.getItem('gCoinWettSystem');
-            if (saved) {
-                gameData = {...gameData, ...JSON.parse(saved)};
+        // Database initialization
+        async function initializeDatabase() {
+            try {
+                // Create tables if they don't exist
+                await createTables();
+                console.log('Database initialized successfully');
+            } catch (error) {
+                console.error('Database initialization error:', error);
             }
         }
         
-        function saveData() {
-            localStorage.setItem('gCoinWettSystem', JSON.stringify(gameData));
+        async function createTables() {
+            // Students table
+            await supabase.rpc('create_students_table', {});
+            
+            // Accounts table  
+            await supabase.rpc('create_accounts_table', {});
+            
+            // Exams table
+            await supabase.rpc('create_exams_table', {});
+            
+            // Bets table
+            await supabase.rpc('create_bets_table', {});
+            
+            // User profiles table
+            await supabase.rpc('create_user_profiles_table', {});
+        }
+        
+        // Data loading and saving
+        async function loadData() {
+            try {
+                // Load students
+                const { data: students, error: studentsError } = await supabase
+                    .from('students')
+                    .select('*');
+                if (!studentsError) gameData.students = students || [];
+                
+                // Load accounts
+                const { data: accounts, error: accountsError } = await supabase
+                    .from('accounts')
+                    .select('*');
+                if (!accountsError) gameData.accounts = accounts || [];
+                
+                // Load exams
+                const { data: exams, error: examsError } = await supabase
+                    .from('exams')
+                    .select('*');
+                if (!examsError) gameData.exams = exams || [];
+                
+                // Load user profiles
+                const { data: profiles, error: profilesError } = await supabase
+                    .from('user_profiles')
+                    .select('*');
+                if (!profilesError) {
+                    gameData.userProfiles = {};
+                    profiles.forEach(profile => {
+                        gameData.userProfiles[profile.username] = {
+                            color: profile.color,
+                            displayName: profile.display_name
+                        };
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                // Fallback to localStorage
+                const saved = localStorage.getItem('gCoinWettSystem');
+                if (saved) {
+                    gameData = {...gameData, ...JSON.parse(saved)};
+                }
+            }
         }
         
         // Generate unique login code
@@ -734,7 +834,9 @@
             });
             
             document.getElementById(tabName + 'Tab').classList.remove('hidden');
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
         }
         
         function updateNavigation() {
@@ -774,21 +876,14 @@
         
         // Login state management
         function showLoginState() {
-            // Check if user has already registered
             const urlParams = new URLSearchParams(window.location.search);
             const code = urlParams.get('code');
             
             if (code) {
-                // Show first time login
                 showFirstTimeLogin();
                 document.getElementById('loginCode').value = code.toUpperCase();
             } else {
-                // Check if there are any registered accounts
-                if (gameData.accounts.length > 0) {
-                    showNormalLogin();
-                } else {
-                    showFirstTimeLogin();
-                }
+                showNormalLogin();
             }
         }
         
@@ -811,13 +906,12 @@
         }
         
         // Registration and login functions
-        function verifyCode() {
+        async function verifyCode() {
             const code = document.getElementById('loginCode').value.trim().toUpperCase();
             const student = gameData.students.find(s => s.code === code);
             
             if (student) {
-                // Check if already registered
-                const existingAccount = gameData.accounts.find(a => a.originalName === student.name);
+                const existingAccount = gameData.accounts.find(a => a.original_name === student.name);
                 if (existingAccount) {
                     alert('Dieser Code wurde bereits verwendet. Bitte verwende den normalen Login.');
                     showNormalLogin();
@@ -825,14 +919,13 @@
                 }
                 
                 showCreateAccount();
-                // Remove code from URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else {
                 alert('Ungültiger Login-Code!');
             }
         }
         
-        function createAccount() {
+        async function createAccount() {
             const code = document.getElementById('loginCode').value.trim().toUpperCase();
             const username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
@@ -859,38 +952,68 @@
                 return;
             }
             
-            // Create account
-            gameData.accounts.push({
-                username: username,
-                password: password,
-                originalName: student.name,
-                coins: gameData.settings.defaultCoins,
-                totalWins: 0,
-                totalBets: 0
-            });
-            
-            // Initialize user profile
-            gameData.userProfiles[username] = {
-                color: userColors[gameData.accounts.length - 1] || '#667eea',
-                displayName: username
-            };
-            
-            saveData();
-            
-            // Auto login
-            currentUser = username;
-            currentUserData = gameData.accounts.find(a => a.username === username);
-            isAdmin = false;
-            updateNavigation();
-            
-            // Clear form
-            document.getElementById('loginCode').value = '';
-            document.getElementById('newUsername').value = '';
-            document.getElementById('newPassword').value = '';
-            document.getElementById('confirmPassword').value = '';
+            try {
+                // Create account in database
+                const { error: accountError } = await supabase
+                    .from('accounts')
+                    .insert({
+                        username: username,
+                        password: password,
+                        original_name: student.name,
+                        coins: gameData.settings.defaultCoins,
+                        total_wins: 0,
+                        total_bets: 0
+                    });
+                
+                if (accountError) throw accountError;
+                
+                // Create user profile
+                const userColor = userColors[gameData.accounts.length] || '#667eea';
+                const { error: profileError } = await supabase
+                    .from('user_profiles')
+                    .insert({
+                        username: username,
+                        color: userColor,
+                        display_name: username
+                    });
+                
+                if (profileError) throw profileError;
+                
+                // Update local data
+                const newAccount = {
+                    username: username,
+                    password: password,
+                    original_name: student.name,
+                    coins: gameData.settings.defaultCoins,
+                    total_wins: 0,
+                    total_bets: 0
+                };
+                
+                gameData.accounts.push(newAccount);
+                gameData.userProfiles[username] = {
+                    color: userColor,
+                    displayName: username
+                };
+                
+                // Auto login
+                currentUser = username;
+                currentUserData = newAccount;
+                isAdmin = false;
+                updateNavigation();
+                
+                // Clear form
+                document.getElementById('loginCode').value = '';
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                
+            } catch (error) {
+                console.error('Error creating account:', error);
+                alert('Fehler beim Erstellen des Kontos. Versuche es erneut.');
+            }
         }
         
-        function performLogin() {
+        async function performLogin() {
             const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             
@@ -934,7 +1057,7 @@
         }
         
         // Admin functions
-        function addStudent() {
+        async function addStudent() {
             const name = document.getElementById('newStudentName').value.trim();
             if (!name) {
                 alert('Bitte Namen eingeben!');
@@ -951,11 +1074,22 @@
                 code: generateLoginCode(name)
             };
             
-            gameData.students.push(student);
-            saveData();
-            loadAdminData();
-            document.getElementById('newStudentName').value = '';
-            alert(`Schüler ${name} hinzugefügt! Login-Code: ${student.code}`);
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .insert(student);
+                
+                if (error) throw error;
+                
+                gameData.students.push(student);
+                loadAdminData();
+                document.getElementById('newStudentName').value = '';
+                alert(`Schüler ${name} hinzugefügt! Login-Code: ${student.code}`);
+                
+            } catch (error) {
+                console.error('Error adding student:', error);
+                alert('Fehler beim Hinzufügen des Schülers.');
+            }
         }
         
         function generateAllLinks() {
@@ -977,21 +1111,32 @@
             });
         }
         
-        function removeStudent(name) {
+        async function removeStudent(name) {
             if (confirm(`Schüler ${name} wirklich löschen?`)) {
-                gameData.students = gameData.students.filter(s => s.name !== name);
-                // Also remove account if exists
-                const account = gameData.accounts.find(a => a.originalName === name);
-                if (account) {
-                    gameData.accounts = gameData.accounts.filter(a => a.originalName !== name);
-                    delete gameData.userProfiles[account.username];
+                try {
+                    // Remove from database
+                    await supabase.from('students').delete().eq('name', name);
+                    
+                    // Remove account if exists
+                    const account = gameData.accounts.find(a => a.original_name === name);
+                    if (account) {
+                        await supabase.from('accounts').delete().eq('original_name', name);
+                        await supabase.from('user_profiles').delete().eq('username', account.username);
+                        gameData.accounts = gameData.accounts.filter(a => a.original_name !== name);
+                        delete gameData.userProfiles[account.username];
+                    }
+                    
+                    gameData.students = gameData.students.filter(s => s.name !== name);
+                    loadAdminData();
+                    
+                } catch (error) {
+                    console.error('Error removing student:', error);
+                    alert('Fehler beim Löschen des Schülers.');
                 }
-                saveData();
-                loadAdminData();
             }
         }
         
-        function addCoins() {
+        async function addCoins() {
             const studentSelect = document.getElementById('coinStudent');
             const amount = parseInt(document.getElementById('coinAmount').value);
             const username = studentSelect.value;
@@ -1001,17 +1146,30 @@
                 return;
             }
             
-            const account = gameData.accounts.find(a => a.username === username);
-            if (account) {
-                account.coins += amount;
-                saveData();
+            try {
+                const { error } = await supabase
+                    .from('accounts')
+                    .update({ coins: supabase.sql`coins + ${amount}` })
+                    .eq('username', username);
+                
+                if (error) throw error;
+                
+                const account = gameData.accounts.find(a => a.username === username);
+                if (account) {
+                    account.coins += amount;
+                }
+                
                 loadAdminData();
                 document.getElementById('coinAmount').value = '';
                 alert(`${amount} G-Coins zu ${username} hinzugefügt!`);
+                
+            } catch (error) {
+                console.error('Error adding coins:', error);
+                alert('Fehler beim Hinzufügen der G-Coins.');
             }
         }
         
-        function addExam() {
+        async function addExam() {
             const subject = document.getElementById('examSubject').value;
             const title = document.getElementById('examTitle').value.trim();
             const examDate = document.getElementById('examDate').value;
@@ -1023,31 +1181,51 @@
             }
             
             const exam = {
-                id: Date.now(),
                 subject: subject,
                 title: title,
-                examDate: examDate,
-                returnDate: returnDate || null,
+                exam_date: examDate,
+                return_date: returnDate || null,
                 status: returnDate ? 'returned' : 'pending'
             };
             
-            gameData.exams.push(exam);
-            saveData();
-            loadAdminData();
-            
-            // Clear form
-            document.getElementById('examTitle').value = '';
-            document.getElementById('examDate').value = '';
-            document.getElementById('returnDate').value = '';
-            
-            alert('Prüfung hinzugefügt!');
+            try {
+                const { data, error } = await supabase
+                    .from('exams')
+                    .insert(exam)
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                gameData.exams.push({
+                    id: data.id,
+                    subject: data.subject,
+                    title: data.title,
+                    examDate: data.exam_date,
+                    returnDate: data.return_date,
+                    status: data.status
+                });
+                
+                loadAdminData();
+                
+                // Clear form
+                document.getElementById('examTitle').value = '';
+                document.getElementById('examDate').value = '';
+                document.getElementById('returnDate').value = '';
+                
+                alert('Prüfung hinzugefügt!');
+                
+            } catch (error) {
+                console.error('Error adding exam:', error);
+                alert('Fehler beim Hinzufügen der Prüfung.');
+            }
         }
         
-        function loadAdminData() {
+        async function loadAdminData() {
             // Load student list
             const studentList = document.getElementById('studentList');
             studentList.innerHTML = gameData.students.map(student => {
-                const account = gameData.accounts.find(a => a.originalName === student.name);
+                const account = gameData.accounts.find(a => a.original_name === student.name);
                 return `
                     <div class="student-item">
                         <div>
@@ -1082,21 +1260,33 @@
                 ).join('');
         }
         
-        function clearAllData() {
+        async function clearAllData() {
             if (confirm('Wirklich ALLE Daten löschen? Dies kann nicht rückgängig gemacht werden!')) {
                 if (confirm('Letzte Warnung: Alle Schüler, Konten, Wetten und Prüfungen werden gelöscht!')) {
-                    gameData = {
-                        students: [],
-                        accounts: [],
-                        exams: [],
-                        bets: {},
-                        results: {},
-                        userProfiles: {},
-                        settings: gameData.settings
-                    };
-                    saveData();
-                    loadAdminData();
-                    alert('Alle Daten wurden gelöscht!');
+                    try {
+                        // Clear all tables
+                        await supabase.from('students').delete().neq('id', 0);
+                        await supabase.from('accounts').delete().neq('id', 0);
+                        await supabase.from('exams').delete().neq('id', 0);
+                        await supabase.from('bets').delete().neq('id', 0);
+                        await supabase.from('user_profiles').delete().neq('username', 'never_exists');
+                        
+                        // Reset local data
+                        gameData = {
+                            students: [],
+                            accounts: [],
+                            exams: [],
+                            userProfiles: {},
+                            settings: gameData.settings
+                        };
+                        
+                        loadAdminData();
+                        alert('Alle Daten wurden gelöscht!');
+                        
+                    } catch (error) {
+                        console.error('Error clearing data:', error);
+                        alert('Fehler beim Löschen der Daten.');
+                    }
                 }
             }
         }
@@ -1108,7 +1298,7 @@
                 document.getElementById('userCoins').textContent = `G-Coins: ${currentUserData.coins}`;
                 document.getElementById('coinDisplay').textContent = `G-Coins: ${currentUserData.coins}`;
                 document.getElementById('userStats').textContent = 
-                    `Siege: ${currentUserData.totalWins} | Gesamte Wetten: ${currentUserData.totalBets}`;
+                    `Siege: ${currentUserData.total_wins} | Gesamte Wetten: ${currentUserData.total_bets}`;
             }
         }
         
@@ -1120,7 +1310,7 @@
                 ).join('');
         }
         
-        function loadExamData() {
+        async function loadExamData() {
             const examId = parseInt(document.getElementById('examSelect').value);
             if (!examId) {
                 document.getElementById('examContent').classList.add('hidden');
@@ -1141,14 +1331,58 @@
                 </div>
             `;
             
+            // Load bets for this exam
+            await loadBetsForExam(examId);
             generateCalendar();
             updateCurrentBets();
+        }
+        
+        async function loadBetsForExam(examId) {
+            try {
+                const { data: bets, error } = await supabase
+                    .from('bets')
+                    .select('*')
+                    .eq('exam_id', examId);
+                
+                if (!error && bets) {
+                    // Group bets by date
+                    gameData.currentExamBets = {};
+                    bets.forEach(bet => {
+                        if (!gameData.currentExamBets[bet.bet_date]) {
+                            gameData.currentExamBets[bet.bet_date] = [];
+                        }
+                        gameData.currentExamBets[bet.bet_date].push({
+                            username: bet.username,
+                            amount: bet.amount
+                        });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading bets:', error);
+            }
         }
         
         function generateCalendar() {
             const calendar = document.getElementById('calendarView');
             const today = new Date();
             let calendarHtml = '';
+            
+            // Calculate betting deadline (2 days after exam)
+            const examDate = new Date(currentExam.examDate);
+            const bettingDeadline = new Date(examDate);
+            bettingDeadline.setDate(examDate.getDate() + 2);
+            const isBettingClosed = today > bettingDeadline;
+            
+            // Add betting status message
+            if (isBettingClosed) {
+                calendarHtml += `<div style="text-align: center; color: red; font-weight: bold; margin-bottom: 15px;">
+                    ⚠️ Wetten geschlossen! (Deadline: 2 Tage nach Prüfung - ${bettingDeadline.toLocaleDateString('de-DE')})
+                </div>`;
+            } else {
+                calendarHtml += `<div style="text-align: center; color: green; font-weight: bold; margin-bottom: 15px;">
+                    ✅ Wetten möglich bis: ${bettingDeadline.toLocaleDateString('de-DE')} (2 Tage nach Prüfung)
+                </div>`;
+            }
             
             // Generate next 4 weeks
             for (let i = 0; i < 28; i++) {
@@ -1159,8 +1393,8 @@
                 const dayNum = date.getDate();
                 
                 // Check if there are bets for this day
-                const dayBets = gameData.bets[currentExam.id] && gameData.bets[currentExam.id][dateStr] ? 
-                              gameData.bets[currentExam.id][dateStr] : [];
+                const dayBets = gameData.currentExamBets && gameData.currentExamBets[dateStr] ? 
+                              gameData.currentExamBets[dateStr] : [];
                 
                 let betIndicators = '';
                 if (dayBets.length > 0) {
@@ -1172,9 +1406,13 @@
                     betIndicators += '</div>';
                 }
                 
+                // Disable clicking if betting is closed
+                const clickHandler = isBettingClosed ? '' : `onclick="toggleDate('${dateStr}')"`;
+                const disabledClass = isBettingClosed ? 'disabled' : '';
+                
                 calendarHtml += `
-                    <div class="calendar-day ${selectedDates.includes(dateStr) ? 'selected' : ''}" 
-                         onclick="toggleDate('${dateStr}')">
+                    <div class="calendar-day ${selectedDates.includes(dateStr) ? 'selected' : ''} ${disabledClass}" 
+                         ${clickHandler}>
                         <div>${dayName}</div>
                         <div>${dayNum}</div>
                         ${betIndicators}
@@ -1235,20 +1473,20 @@
         }
         
         function getCurrentBet(dateStr) {
-            if (!gameData.bets[currentExam.id] || !gameData.bets[currentExam.id][dateStr]) {
+            if (!gameData.currentExamBets || !gameData.currentExamBets[dateStr]) {
                 return '';
             }
             
-            const bet = gameData.bets[currentExam.id][dateStr].find(b => b.username === currentUser);
+            const bet = gameData.currentExamBets[dateStr].find(b => b.username === currentUser);
             return bet ? bet.amount : '';
         }
         
         function getTotalPool() {
-            if (!gameData.bets[currentExam.id]) return 0;
+            if (!gameData.currentExamBets) return 0;
             
             let total = 0;
-            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
-                gameData.bets[currentExam.id][date].forEach(bet => {
+            Object.keys(gameData.currentExamBets).forEach(date => {
+                gameData.currentExamBets[date].forEach(bet => {
                     total += bet.amount;
                 });
             });
@@ -1256,18 +1494,29 @@
         }
         
         function getDayTotal(dateStr) {
-            if (!gameData.bets[currentExam.id] || !gameData.bets[currentExam.id][dateStr]) return 0;
+            if (!gameData.currentExamBets || !gameData.currentExamBets[dateStr]) return 0;
             
-            return gameData.bets[currentExam.id][dateStr].reduce((sum, bet) => sum + bet.amount, 0);
+            return gameData.currentExamBets[dateStr].reduce((sum, bet) => sum + bet.amount, 0);
         }
         
         function updateTotalPool() {
             document.getElementById('totalPool').textContent = `Gesamter Pot: ${getTotalPool()} G-Coins`;
         }
         
-        function showBetConfirmation() {
+        async function showBetConfirmation() {
             if (!currentExam) {
                 alert('Bitte wähle erst eine Prüfung aus!');
+                return;
+            }
+            
+            // Check if betting is still allowed (2 days after exam)
+            const today = new Date();
+            const examDate = new Date(currentExam.examDate);
+            const bettingDeadline = new Date(examDate);
+            bettingDeadline.setDate(examDate.getDate() + 2);
+            
+            if (today > bettingDeadline) {
+                alert(`Wetten sind geschlossen! Die Deadline war am ${bettingDeadline.toLocaleDateString('de-DE')} (2 Tage nach der Prüfung).`);
                 return;
             }
             
@@ -1304,7 +1553,7 @@
             document.getElementById('betModal').style.display = 'block';
         }
         
-        function confirmBets() {
+        async function confirmBets() {
             let totalBet = 0;
             const newBets = {};
             
@@ -1319,46 +1568,60 @@
                 }
             });
             
-            // Deduct coins
-            currentUserData.coins -= totalBet;
-            currentUserData.totalBets += totalBet;
-            
-            // Initialize data structures
-            if (!gameData.bets[currentExam.id]) {
-                gameData.bets[currentExam.id] = {};
-            }
-            
-            // Remove existing bets for this user on this exam
-            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
-                gameData.bets[currentExam.id][date] = gameData.bets[currentExam.id][date].filter(bet => bet.username !== currentUser);
-            });
-            
-            // Add new bets
-            Object.keys(newBets).forEach(date => {
-                if (!gameData.bets[currentExam.id][date]) {
-                    gameData.bets[currentExam.id][date] = [];
+            try {
+                // Remove existing bets for this user on this exam
+                await supabase
+                    .from('bets')
+                    .delete()
+                    .eq('exam_id', currentExam.id)
+                    .eq('username', currentUser);
+                
+                // Add new bets
+                const betsToInsert = Object.keys(newBets).map(date => ({
+                    exam_id: currentExam.id,
+                    username: currentUser,
+                    bet_date: date,
+                    amount: newBets[date]
+                }));
+                
+                if (betsToInsert.length > 0) {
+                    const { error: betsError } = await supabase
+                        .from('bets')
+                        .insert(betsToInsert);
+                    
+                    if (betsError) throw betsError;
                 }
                 
-                gameData.bets[currentExam.id][date].push({
-                    username: currentUser,
-                    amount: newBets[date]
-                });
-            });
-            
-            saveData();
-            updateUserInfo();
-            generateCalendar();
-            updateCurrentBets();
-            closeBetModal();
-            
-            // Clear selection and inputs
-            selectedDates = [];
-            selectedDates.forEach(dateStr => {
-                const betInput = document.getElementById(`bet-${dateStr}`);
-                if (betInput) betInput.value = '';
-            });
-            
-            alert('Wetten wurden bestätigt und können nicht mehr geändert werden!');
+                // Update user coins and stats
+                const { error: accountError } = await supabase
+                    .from('accounts')
+                    .update({
+                        coins: currentUserData.coins - totalBet,
+                        total_bets: currentUserData.total_bets + totalBet
+                    })
+                    .eq('username', currentUser);
+                
+                if (accountError) throw accountError;
+                
+                // Update local data
+                currentUserData.coins -= totalBet;
+                currentUserData.total_bets += totalBet;
+                
+                // Reload exam data
+                await loadExamData();
+                
+                updateUserInfo();
+                closeBetModal();
+                
+                // Clear selection
+                selectedDates = [];
+                
+                alert('Wetten wurden bestätigt und können nicht mehr geändert werden!');
+                
+            } catch (error) {
+                console.error('Error confirming bets:', error);
+                alert('Fehler beim Speichern der Wetten. Versuche es erneut.');
+            }
         }
         
         function closeBetModal() {
@@ -1368,15 +1631,15 @@
         function updateCurrentBets() {
             const container = document.getElementById('currentBets');
             
-            if (!gameData.bets[currentExam.id]) {
+            if (!gameData.currentExamBets || Object.keys(gameData.currentExamBets).length === 0) {
                 container.innerHTML = '<p>Noch keine Wetten für diese Prüfung.</p>';
                 return;
             }
             
             let html = '<div class="bet-summary">';
             
-            Object.keys(gameData.bets[currentExam.id]).forEach(date => {
-                const bets = gameData.bets[currentExam.id][date];
+            Object.keys(gameData.currentExamBets).forEach(date => {
+                const bets = gameData.currentExamBets[date];
                 if (bets.length > 0) {
                     const dateObj = new Date(date);
                     const dayName = dateObj.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -1399,7 +1662,7 @@
             container.innerHTML = html;
         }
         
-        function determineWinners() {
+        async function determineWinners() {
             const examId = parseInt(document.getElementById('winnerExam').value);
             const winDate = document.getElementById('winnerDate').value;
             
@@ -1411,54 +1674,85 @@
             const exam = gameData.exams.find(e => e.id === examId);
             if (!exam) return;
             
-            if (!gameData.bets[examId] || !gameData.bets[examId][winDate]) {
-                alert('Keine Wetten für diesen Tag gefunden!');
-                return;
-            }
-            
-            const winners = gameData.bets[examId][winDate];
-            const totalPool = getTotalPoolForExam(examId);
-            const winnerTotal = winners.reduce((sum, bet) => sum + bet.amount, 0);
-            
-            // Update exam status
-            exam.returnDate = winDate;
-            exam.status = 'returned';
-            
-            // Calculate and distribute winnings
-            winners.forEach(winner => {
-                const payout = Math.floor((winner.amount / winnerTotal) * totalPool);
-                const account = gameData.accounts.find(a => a.username === winner.username);
-                if (account) {
-                    account.coins += payout;
-                    account.totalWins += (payout - winner.amount);
+            try {
+                // Get bets for winning date
+                const { data: winningBets, error: betsError } = await supabase
+                    .from('bets')
+                    .select('*')
+                    .eq('exam_id', examId)
+                    .eq('bet_date', winDate);
+                
+                if (betsError) throw betsError;
+                
+                if (!winningBets || winningBets.length === 0) {
+                    alert('Keine Wetten für diesen Tag gefunden!');
+                    return;
                 }
-            });
-            
-            saveData();
-            loadAdminData();
-            alert(`Gewinner für ${exam.subject}: ${exam.title} wurden berechnet und G-Coins ausgezahlt!`);
-        }
-        
-        function getTotalPoolForExam(examId) {
-            if (!gameData.bets[examId]) return 0;
-            
-            let total = 0;
-            Object.keys(gameData.bets[examId]).forEach(date => {
-                gameData.bets[examId][date].forEach(bet => {
-                    total += bet.amount;
-                });
-            });
-            return total;
+                
+                // Get all bets for this exam to calculate total pool
+                const { data: allBets, error: allBetsError } = await supabase
+                    .from('bets')
+                    .select('*')
+                    .eq('exam_id', examId);
+                
+                if (allBetsError) throw allBetsError;
+                
+                const totalPool = allBets.reduce((sum, bet) => sum + bet.amount, 0);
+                const winnerTotal = winningBets.reduce((sum, bet) => sum + bet.amount, 0);
+                
+                // Update exam status
+                const { error: examError } = await supabase
+                    .from('exams')
+                    .update({
+                        return_date: winDate,
+                        status: 'returned'
+                    })
+                    .eq('id', examId);
+                
+                if (examError) throw examError;
+                
+                // Calculate and distribute winnings
+                for (const winner of winningBets) {
+                    const payout = Math.floor((winner.amount / winnerTotal) * totalPool);
+                    const profit = payout - winner.amount;
+                    
+                    await supabase
+                        .from('accounts')
+                        .update({
+                            coins: supabase.sql`coins + ${payout}`,
+                            total_wins: supabase.sql`total_wins + ${profit}`
+                        })
+                        .eq('username', winner.username);
+                        
+                    // Update local data
+                    const account = gameData.accounts.find(a => a.username === winner.username);
+                    if (account) {
+                        account.coins += payout;
+                        account.total_wins += profit;
+                    }
+                }
+                
+                // Update local exam data
+                exam.returnDate = winDate;
+                exam.status = 'returned';
+                
+                loadAdminData();
+                alert(`Gewinner für ${exam.subject}: ${exam.title} wurden berechnet und G-Coins ausgezahlt!`);
+                
+            } catch (error) {
+                console.error('Error determining winners:', error);
+                alert('Fehler beim Berechnen der Gewinner.');
+            }
         }
         
         // Profile management
         function initializeUserProfile() {
             if (!gameData.userProfiles[currentUser]) {
+                const userColor = userColors[gameData.accounts.length - 1] || '#667eea';
                 gameData.userProfiles[currentUser] = {
-                    color: userColors[gameData.accounts.length - 1] || '#667eea',
+                    color: userColor,
                     displayName: currentUser
                 };
-                saveData();
             }
             
             loadProfile();
@@ -1486,44 +1780,81 @@
             document.getElementById('colorPreview').style.backgroundColor = color;
         }
         
-        function saveProfile() {
+        async function saveProfile() {
             const selectedColor = document.querySelector('.color-option.selected');
             if (selectedColor) {
                 const color = selectedColor.style.backgroundColor;
-                // Convert rgb to hex
-                const rgb = color.match(/\d+/g);
-                const hex = rgb ? `#${rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('')}` : color;
+                // Convert rgb to hex if needed
+                let hexColor = color;
+                if (color.startsWith('rgb')) {
+                    const rgb = color.match(/\d+/g);
+                    hexColor = rgb ? `#${rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('')}` : color;
+                }
                 
-                gameData.userProfiles[currentUser].color = hex;
-                saveData();
-                alert('Profil gespeichert!');
-                
-                // Refresh calendar if on user tab
-                if (currentExam) {
-                    generateCalendar();
+                try {
+                    const { error } = await supabase
+                        .from('user_profiles')
+                        .upsert({
+                            username: currentUser,
+                            color: hexColor,
+                            display_name: currentUser
+                        });
+                    
+                    if (error) throw error;
+                    
+                    gameData.userProfiles[currentUser].color = hexColor;
+                    alert('Profil gespeichert!');
+                    
+                    // Refresh calendar if on user tab
+                    if (currentExam) {
+                        await loadExamData();
+                    }
+                    
+                } catch (error) {
+                    console.error('Error saving profile:', error);
+                    alert('Fehler beim Speichern des Profils.');
                 }
             }
         }
         
         // Initialize app
-        function initApp() {
-            loadData();
-            
-            // Check for login code in URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            if (code) {
-                // Don't auto-login, just show the first time login form
-            }
-            
-            updateNavigation();
-            
-            // Close modal when clicking outside
-            window.onclick = function(event) {
-                const modal = document.getElementById('betModal');
-                if (event.target === modal) {
-                    closeBetModal();
+        async function initApp() {
+            try {
+                // Show loading screen
+                document.getElementById('loadingScreen').classList.remove('hidden');
+                document.getElementById('loginTab').classList.add('hidden');
+                
+                // Initialize database and load data
+                await initializeDatabase();
+                await loadData();
+                
+                // Hide loading screen
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginTab').classList.remove('hidden');
+                
+                // Check for login code in URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                if (code) {
+                    // Don't auto-login, just show the first time login form
                 }
+                
+                updateNavigation();
+                
+                // Close modal when clicking outside
+                window.onclick = function(event) {
+                    const modal = document.getElementById('betModal');
+                    if (event.target === modal) {
+                        closeBetModal();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('App initialization error:', error);
+                // Hide loading and show login anyway
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginTab').classList.remove('hidden');
+                updateNavigation();
             }
         }
         
