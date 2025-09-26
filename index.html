@@ -520,3 +520,728 @@
                         <button class="btn" onclick="performLogin()">Einloggen</button>
                         <button class="btn btn-warning" onclick="showFirstTimeLogin()">Ersten Login verwenden</button>
                     </div>
+
+                    <div id="firstTimeLogin" class="hidden">
+                        <h2>Erstmaliges Login</h2>
+                        <p>Verwende deinen Login-Code um ein Konto zu erstellen:</p>
+                        <div class="form-group">
+                            <label>Login-Code:</label>
+                            <input type="text" id="loginCode" placeholder="Login-Code eingeben">
+                        </div>
+                        <button class="btn" onclick="verifyCode()">Code überprüfen</button>
+                        <button class="btn btn-warning" onclick="showNormalLogin()">Zurück zum Login</button>
+                    </div>
+                    
+                    <div id="createAccount" class="hidden">
+                        <h2>Konto erstellen</h2>
+                        <div class="form-group">
+                            <label>Benutzername:</label>
+                            <input type="text" id="newUsername" placeholder="Benutzername wählen">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort:</label>
+                            <input type="password" id="newPassword" placeholder="Passwort erstellen">
+                        </div>
+                        <div class="form-group">
+                            <label>Passwort bestätigen:</label>
+                            <input type="password" id="confirmPassword" placeholder="Passwort wiederholen">
+                        </div>
+                        <button class="btn" onclick="createAccount()">Konto erstellen</button>
+                        <button class="btn btn-danger" onclick="cancelRegistration()">Abbrechen</button>
+                    </div>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <div id="adminLoginSection">
+                        <h3>Admin Login</h3>
+                        <div class="form-group">
+                            <input type="password" id="adminPassword" placeholder="Admin-Passwort">
+                        </div>
+                        <button class="btn btn-danger" onclick="adminLogin()">Als Admin einloggen</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Admin Panel -->
+            <div id="adminTab" class="tab-content hidden">
+                <div class="admin-panel">
+                    <div class="admin-section">
+                        <h3>👥 Schülerverwaltung</h3>
+                        <div class="form-group">
+                            <input type="text" id="newStudentName" placeholder="Name des Schülers">
+                            <button class="btn" onclick="addStudent()">Schüler hinzufügen</button>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-success" onclick="generateAllLinks()">Alle Login-Links generieren</button>
+                            <button class="btn btn-danger" onclick="clearAllData()">Alle Daten löschen</button>
+                        </div>
+                        <div id="studentList" class="student-list"></div>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h3>💰 G-Coins verwalten</h3>
+                        <div class="form-group">
+                            <label>Schüler auswählen:</label>
+                            <select id="coinStudent"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>G-Coins hinzufügen:</label>
+                            <input type="number" id="coinAmount" min="1" placeholder="Anzahl G-Coins">
+                        </div>
+                        <button class="btn btn-success" onclick="addCoins()">G-Coins hinzufügen</button>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h3>📅 Prüfungen verwalten</h3>
+                        <div class="form-group">
+                            <label>Fach:</label>
+                            <select id="examSubject">
+                                <option value="Mathe">Mathe</option>
+                                <option value="Geschichte">Geschichte</option>
+                                <option value="Wirtschaft">Wirtschaft</option>
+                                <option value="Physik">Physik</option>
+                                <option value="Englisch">Englisch</option>
+                                <option value="Französisch">Französisch</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Prüfungstitel:</label>
+                            <input type="text" id="examTitle" placeholder="z.B. Quadratische Gleichungen">
+                        </div>
+                        <div class="form-group">
+                            <label>Prüfungsdatum:</label>
+                            <input type="date" id="examDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Rückgabedatum (falls bekannt):</label>
+                            <input type="date" id="returnDate">
+                        </div>
+                        <button class="btn" onclick="addExam()">Prüfung hinzufügen</button>
+                        <div id="examList"></div>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h3>🏆 Gewinner bestimmen</h3>
+                        <div class="form-group">
+                            <label>Prüfung auswählen:</label>
+                            <select id="winnerExam"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gewinnertag:</label>
+                            <input type="date" id="winnerDate">
+                        </div>
+                        <button class="btn btn-success" onclick="determineWinners()">Gewinner berechnen</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Leaderboard Tab -->
+            <div id="leaderboardTab" class="tab-content hidden">
+                <div class="user-dashboard">
+                    <h2>🏆 Rangliste</h2>
+                    
+                    <div class="admin-section">
+                        <h3>💰 G-Coins Rangliste</h3>
+                        <div id="coinsLeaderboard" class="student-list"></div>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h3>🎯 Gewinn-Rangliste</h3>
+                        <div id="winsLeaderboard" class="student-list"></div>
+                    </div>
+                    
+                    <div class="admin-section">
+                        <h3>📊 Gesamtstatistiken</h3>
+                        <div id="totalStats" class="bet-summary"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Dashboard -->
+            <div id="userTab" class="tab-content hidden">
+                <div class="user-info">
+                    <div>
+                        <strong id="userName">Benutzer</strong>
+                        <div id="userCoins" class="student-coins">G-Coins: 0</div>
+                        <span id="userStats">Statistiken werden geladen...</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="logout()">Logout</button>
+                </div>
+                
+                <div class="betting-section">
+                    <h3>📚 Prüfung auswählen:</h3>
+                    <div class="form-group">
+                        <select id="examSelect" onchange="loadExamData()">
+                            <option value="">Prüfung wählen...</option>
+                        </select>
+                    </div>
+                    
+                    <div id="examContent" class="hidden">
+                        <div id="examInfo"></div>
+                        
+                        <h4>📅 Kalenderansicht:</h4>
+                        <div class="calendar-view" id="calendarView"></div>
+                        
+                        <h4>💰 Wetten platzieren:</h4>
+                        <div class="betting-grid" id="bettingGrid"></div>
+                        
+                        <div class="form-group">
+                            <button class="btn" onclick="showBetConfirmation()">Wetten platzieren</button>
+                        </div>
+                        
+                        <div class="total-pool" id="totalPool">Gesamter Pot: 0 G-Coins</div>
+                        
+                        <div class="current-bets">
+                            <h4>💰 Aktuelle Wetten:</h4>
+                            <div id="currentBets"></div>
+                        </div>
+                        
+                        <div id="results" class="results hidden"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Tab -->
+            <div id="profileTab" class="tab-content hidden">
+                <div class="profile-section">
+                    <h2>👤 Profil verwalten</h2>
+                    
+                    <div class="profile-preview">
+                        <div class="profile-color-demo" id="colorPreview"></div>
+                        <strong id="profileName">Benutzername</strong>
+                        <div>Deine Farbe im Kalender</div>
+                    </div>
+                    
+                    <h3>🎨 Farbe wählen:</h3>
+                    <div class="color-picker" id="colorPicker"></div>
+                    
+                    <div class="form-group">
+                        <button class="btn" onclick="saveProfile()">Profil speichern</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bet Confirmation Modal -->
+    <div id="betModal" class="modal">
+        <div class="modal-content">
+            <h3>Wette bestätigen</h3>
+            <div id="betSummary"></div>
+            <p><strong>Achtung:</strong> Nach der Bestätigung kannst du diese Wetten nicht mehr ändern!</p>
+            <button class="btn btn-success" onclick="confirmBets()">Ja, Wette bestätigen</button>
+            <button class="btn btn-danger" onclick="closeBetModal()">Abbrechen</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://wjunjakkqsktdoisokci.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdW5qYWtrcXNrdGRvaXNva2NpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3OTI1ODYsImV4cCI6MjA3NDM2ODU4Nn0.qMT-ZuKX6F3DYoAml3nf48WT8bL8GfWQvwxoOEfBiwI';
+        
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Global state
+        let currentUser = null;
+        let isAdmin = false;
+        let currentExam = null;
+        let selectedDates = [];
+        let currentUserData = null;
+        let gameData = {
+            students: [],
+            accounts: [],
+            exams: [],
+            userProfiles: {},
+            settings: {
+                adminPassword: 'L.admin',
+                defaultCoins: 100
+            }
+        };
+        
+        // Predefined colors for users
+        const userColors = [
+            '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+            '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+            '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#F4D03F',
+            '#AED6F1', '#A9DFBF', '#F9E79F', '#D7A3F0', '#FFB347'
+        ];
+
+        Teil 4 (JavaScript) - Erste Hälfte:
+javascript        // Database initialization
+        async function initializeDatabase() {
+            try {
+                await createTables();
+                console.log('Database initialized successfully');
+            } catch (error) {
+                console.error('Database initialization error:', error);
+            }
+        }
+        
+        async function createTables() {
+            await supabase.rpc('create_students_table', {});
+            await supabase.rpc('create_accounts_table', {});
+            await supabase.rpc('create_exams_table', {});
+            await supabase.rpc('create_bets_table', {});
+            await supabase.rpc('create_user_profiles_table', {});
+        }
+        
+        // Data loading and saving
+        async function loadData() {
+            try {
+                const { data: students, error: studentsError } = await supabase
+                    .from('students')
+                    .select('*');
+                if (!studentsError) gameData.students = students || [];
+                
+                const { data: accounts, error: accountsError } = await supabase
+                    .from('accounts')
+                    .select('*');
+                if (!accountsError) gameData.accounts = accounts || [];
+                
+                const { data: exams, error: examsError } = await supabase
+                    .from('exams')
+                    .select('*');
+                if (!examsError) gameData.exams = exams || [];
+                
+                const { data: profiles, error: profilesError } = await supabase
+                    .from('user_profiles')
+                    .select('*');
+                if (!profilesError) {
+                    gameData.userProfiles = {};
+                    profiles.forEach(profile => {
+                        gameData.userProfiles[profile.username] = {
+                            color: profile.color,
+                            displayName: profile.display_name
+                        };
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                const saved = localStorage.getItem('gCoinWettSystem');
+                if (saved) {
+                    gameData = {...gameData, ...JSON.parse(saved)};
+                }
+            }
+        }
+        
+        function generateLoginCode(studentName) {
+            return btoa(studentName + Date.now()).substring(0, 8).toUpperCase();
+        }
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + 'Tab').classList.remove('hidden');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+        }
+        
+        function updateNavigation() {
+            const navTabs = document.getElementById('navTabs');
+            const headerInfo = document.getElementById('headerInfo');
+            const coinDisplay = document.getElementById('coinDisplay');
+            
+            if (isAdmin) {
+                navTabs.innerHTML = `
+                    <button class="tab active" onclick="showTab('admin')">Admin Panel</button>
+                    <button class="tab" onclick="showTab('user')">Wettsystem</button>
+                    <button class="tab" onclick="showTab('leaderboard')">Rangliste</button>
+                `;
+                headerInfo.textContent = 'Admin-Bereich';
+                coinDisplay.classList.add('hidden');
+                showTab('admin');
+                loadAdminData();
+            } else if (currentUser) {
+                navTabs.innerHTML = `
+                    <button class="tab active" onclick="showTab('user')">Wettsystem</button>
+                    <button class="tab" onclick="showTab('leaderboard')">Rangliste</button>
+                    <button class="tab" onclick="showTab('profile')">Profil</button>
+                `;
+                headerInfo.textContent = `Willkommen, ${currentUser}!`;
+                coinDisplay.classList.remove('hidden');
+                showTab('user');
+                updateUserInfo();
+                loadUserExams();
+                initializeUserProfile();
+                loadLeaderboard();
+            } else {
+                navTabs.innerHTML = `
+                    <button class="tab active" onclick="showTab('login')">Login</button>
+                `;
+                headerInfo.textContent = 'Bitte einloggen';
+                coinDisplay.classList.add('hidden');
+                showLoginState();
+            }
+        }
+        
+        function showLoginState() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            
+            if (code) {
+                showFirstTimeLogin();
+                document.getElementById('loginCode').value = code.toUpperCase();
+            } else {
+                showNormalLogin();
+            }
+        }
+        
+        function showFirstTimeLogin() {
+            document.getElementById('firstTimeLogin').classList.remove('hidden');
+            document.getElementById('createAccount').classList.add('hidden');
+            document.getElementById('normalLogin').classList.add('hidden');
+        }
+        
+        function showNormalLogin() {
+            document.getElementById('firstTimeLogin').classList.add('hidden');
+            document.getElementById('createAccount').classList.add('hidden');
+            document.getElementById('normalLogin').classList.remove('hidden');
+        }
+        
+        function showCreateAccount() {
+            document.getElementById('firstTimeLogin').classList.add('hidden');
+            document.getElementById('createAccount').classList.remove('hidden');
+            document.getElementById('normalLogin').classList.add('hidden');
+        }
+        
+        async function verifyCode() {
+            const code = document.getElementById('loginCode').value.trim().toUpperCase();
+            const student = gameData.students.find(s => s.code === code);
+            
+            if (student) {
+                const existingAccount = gameData.accounts.find(a => a.original_name === student.name);
+                if (existingAccount) {
+                    alert('Dieser Code wurde bereits verwendet. Bitte verwende den normalen Login.');
+                    showNormalLogin();
+                    return;
+                }
+                
+                showCreateAccount();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                alert('Ungültiger Login-Code!');
+            }
+        }
+
+async function createAccount() {
+            const code = document.getElementById('loginCode').value.trim().toUpperCase();
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!username || !password) {
+                alert('Bitte alle Felder ausfüllen!');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('Passwörter stimmen nicht überein!');
+                return;
+            }
+            
+            if (gameData.accounts.find(a => a.username === username)) {
+                alert('Benutzername bereits vergeben!');
+                return;
+            }
+            
+            const student = gameData.students.find(s => s.code === code);
+            if (!student) {
+                alert('Ungültiger Login-Code!');
+                return;
+            }
+            
+            try {
+                const { error: accountError } = await supabase
+                    .from('accounts')
+                    .insert({
+                        username: username,
+                        password: password,
+                        original_name: student.name,
+                        coins: gameData.settings.defaultCoins,
+                        total_wins: 0,
+                        total_bets: 0
+                    });
+                
+                if (accountError) throw accountError;
+                
+                const userColor = userColors[gameData.accounts.length] || '#667eea';
+                const { error: profileError } = await supabase
+                    .from('user_profiles')
+                    .insert({
+                        username: username,
+                        color: userColor,
+                        display_name: username
+                    });
+                
+                if (profileError) throw profileError;
+                
+                const newAccount = {
+                    username: username,
+                    password: password,
+                    original_name: student.name,
+                    coins: gameData.settings.defaultCoins,
+                    total_wins: 0,
+                    total_bets: 0
+                };
+                
+                gameData.accounts.push(newAccount);
+                gameData.userProfiles[username] = {
+                    color: userColor,
+                    displayName: username
+                };
+                
+                currentUser = username;
+                currentUserData = newAccount;
+                isAdmin = false;
+                updateNavigation();
+                
+                document.getElementById('loginCode').value = '';
+                document.getElementById('newUsername').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+                
+            } catch (error) {
+                console.error('Error creating account:', error);
+                alert('Fehler beim Erstellen des Kontos. Versuche es erneut.');
+            }
+        }
+        
+        async function performLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            
+            const account = gameData.accounts.find(a => a.username === username && a.password === password);
+            if (account) {
+                currentUser = username;
+                currentUserData = account;
+                isAdmin = false;
+                updateNavigation();
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+            } else {
+                alert('Ungültiger Benutzername oder Passwort!');
+            }
+        }
+        
+        function adminLogin() {
+            const password = document.getElementById('adminPassword').value;
+            if (password === gameData.settings.adminPassword) {
+                currentUser = 'Admin';
+                isAdmin = true;
+                updateNavigation();
+                document.getElementById('adminPassword').value = '';
+            } else {
+                alert('Falsches Admin-Passwort!');
+            }
+        }
+        
+        function cancelRegistration() {
+            showFirstTimeLogin();
+            document.getElementById('loginCode').value = '';
+        }
+        
+        function logout() {
+            currentUser = null;
+            currentUserData = null;
+            isAdmin = false;
+            currentExam = null;
+            updateNavigation();
+            showTab('login');
+        }
+        
+        // Admin functions
+        async function addStudent() {
+            const name = document.getElementById('newStudentName').value.trim();
+            if (!name) {
+                alert('Bitte Namen eingeben!');
+                return;
+            }
+            
+            if (gameData.students.find(s => s.name === name)) {
+                alert('Schüler existiert bereits!');
+                return;
+            }
+            
+            const student = {
+                name: name,
+                code: generateLoginCode(name)
+            };
+            
+            try {
+                const { error } = await supabase
+                    .from('students')
+                    .insert(student);
+                
+                if (error) throw error;
+                
+                gameData.students.push(student);
+                loadAdminData();
+                document.getElementById('newStudentName').value = '';
+                alert(`Schüler ${name} hinzugefügt! Login-Code: ${student.code}`);
+                
+            } catch (error) {
+                console.error('Error adding student:', error);
+                alert('Fehler beim Hinzufügen des Schülers.');
+            }
+        }
+        
+        function generateAllLinks() {
+            if (gameData.students.length === 0) {
+                alert('Keine Schüler vorhanden!');
+                return;
+            }
+            
+            let linkText = 'Login-Links für alle Schüler:\n\n';
+            gameData.students.forEach(student => {
+                const url = window.location.origin + window.location.pathname + '?code=' + student.code;
+                linkText += `${student.name}: ${url}\n`;
+            });
+            
+            navigator.clipboard.writeText(linkText).then(() => {
+                alert('Alle Links wurden in die Zwischenablage kopiert!');
+            }).catch(() => {
+                prompt('Kopiere diese Links:', linkText);
+            });
+        }
+        
+        // Leaderboard functions
+        async function loadLeaderboard() {
+            await loadData();
+            updateLeaderboards();
+        }
+        
+        function updateLeaderboards() {
+            const coinsSorted = [...gameData.accounts].sort((a, b) => b.coins - a.coins);
+            const winsSorted = [...gameData.accounts].sort((a, b) => b.total_wins - a.total_wins);
+            
+            const coinsLeaderboard = document.getElementById('coinsLeaderboard');
+            coinsLeaderboard.innerHTML = coinsSorted.map((account, index) => {
+                const userColor = gameData.userProfiles[account.username]?.color || '#667eea';
+                const medal = index < 3 ? ['🥇', '🥈', '🥉'][index] : `${index + 1}.`;
+                
+                return `
+                    <div class="student-item" style="border-left: 4px solid ${userColor}">
+                        <div>
+                            <span style="font-size: 1.2em; margin-right: 10px;">${medal}</span>
+                            <strong>${account.username}</strong>
+                            <div class="student-coins">G-Coins: ${account.coins}</div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.9em; color: #666;">
+                            Wetten: ${account.total_bets}<br>
+                            Erfolgsrate: ${account.total_bets > 0 ? ((account.total_wins / account.total_bets) * 100).toFixed(1) : '0'}%
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const winsLeaderboard = document.getElementById('winsLeaderboard');
+            winsLeaderboard.innerHTML = winsSorted.map((account, index) => {
+                const userColor = gameData.userProfiles[account.username]?.color || '#667eea';
+                const medal = index < 3 ? ['🏆', '🎯', '🎖️'][index] : `${index + 1}.`;
+                
+                return `
+                    <div class="student-item" style="border-left: 4px solid ${userColor}">
+                        <div>
+                            <span style="font-size: 1.2em; margin-right: 10px;">${medal}</span>
+                            <strong>${account.username}</strong>
+                            <div style="color: ${account.total_wins >= 0 ? 'green' : 'red'}; font-weight: bold;">
+                                Gewinn: ${account.total_wins >= 0 ? '+' : ''}${account.total_wins} G-Coins
+                            </div>
+                        </div>
+                        <div style="text-align: right; font-size: 0.9em; color: #666;">
+                            Gesamt Coins: ${account.coins}<br>
+                            Wetten: ${account.total_bets}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            const totalStats = document.getElementById('totalStats');
+            const totalPlayers = gameData.accounts.length;
+            const totalCoins = gameData.accounts.reduce((sum, acc) => sum + acc.coins, 0);
+            const totalBets = gameData.accounts.reduce((sum, acc) => sum + acc.total_bets, 0);
+            const totalExams = gameData.exams.length;
+            const activeExams = gameData.exams.filter(exam => exam.status === 'pending').length;
+            
+            totalStats.innerHTML = `
+                <div class="bet-card">
+                    <h4>🎲 Allgemeine Statistiken</h4>
+                    <p><strong>Aktive Spieler:</strong> ${totalPlayers}</p>
+                    <p><strong>G-Coins im Umlauf:</strong> ${totalCoins}</p>
+                    <p><strong>Gesamte Wetten:</strong> ${totalBets}</p>
+                    <p><strong>Prüfungen:</strong> ${totalExams} (${activeExams} aktiv)</p>
+                </div>
+                
+                <div class="bet-card">
+                    <h4>👑 Aktueller Champion</h4>
+                    ${coinsSorted.length > 0 ? `
+                        <div style="text-align: center; padding: 10px;">
+                            <div style="font-size: 1.5em;">🥇</div>
+                            <strong style="font-size: 1.2em;">${coinsSorted[0].username}</strong>
+                            <div class="student-coins" style="margin: 10px 0;">${coinsSorted[0].coins} G-Coins</div>
+                        </div>
+                    ` : '<p>Noch keine Spieler vorhanden</p>'}
+                </div>
+                
+                <div class="bet-card">
+                    <h4>🎯 Bester Trader</h4>
+                    ${winsSorted.length > 0 && winsSorted[0].total_wins > 0 ? `
+                        <div style="text-align: center; padding: 10px;">
+                            <div style="font-size: 1.5em;">🏆</div>
+                            <strong style="font-size: 1.2em;">${winsSorted[0].username}</strong>
+                            <div style="color: green; font-weight: bold; margin: 10px 0;">
+                                +${winsSorted[0].total_wins} G-Coins Gewinn
+                            </div>
+                        </div>
+                    ` : '<p>Noch keine Gewinne erzielt</p>'}
+                </div>
+            `;
+        }
+        
+        // Initialize app
+        async function initApp() {
+            try {
+                document.getElementById('loadingScreen').classList.remove('hidden');
+                document.getElementById('loginTab').classList.add('hidden');
+                
+                await initializeDatabase();
+                await loadData();
+                
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginTab').classList.remove('hidden');
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                if (code) {
+                    // Don't auto-login, just show the first time login form
+                }
+                
+                updateNavigation();
+                
+                window.onclick = function(event) {
+                    const modal = document.getElementById('betModal');
+                    if (event.target === modal) {
+                        closeBetModal();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('App initialization error:', error);
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('loginTab').classList.remove('hidden');
+                updateNavigation();
+            }
+        }
+        
+        initApp();
+    </script>
+</body>
+</html>        
